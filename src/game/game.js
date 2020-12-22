@@ -4,6 +4,7 @@ import './game.css';
 // Renders a single square button
 // This is a controlled component with it's state
 // controlled by the parent component of the Board.
+//#region 
 function Square(props) {
   return (
       <button className="square"
@@ -13,7 +14,7 @@ function Square(props) {
       </button>
     );
   }
-
+//#endregion
 // Renders 9 square components  
 class Board extends Component {
   renderSquare(i) { //[pass as prop called value to the square]
@@ -58,12 +59,13 @@ class Game extends Component {
       history: [{
         squares: Array(9).fill(null),
       }],
+      stepNumber: 0,
       xIsNext: false,
     };
   }
   // These two components give control over the square by the board
   handleClick(i) {
-    const history = this.state.history;
+    const history = this.state.history.slice(0, this.state.stepNumber + 1);
     const current = history[history.length - 1];
     const squares = current.squares.slice();
     if (calculateWinner(squares) || squares[i]) {
@@ -74,16 +76,36 @@ class Game extends Component {
       history: history.concat([{
         squares : squares,
       }]),
+      stepNumber: history.length,
       xIsNext: !this.state.xIsNext,
      });
   }
 
-  
+  jumpTo(step) {
+    this.setState({
+      stepNumber: step,
+      xIsNext: (step % 2 === 0),
+    })
+  }
 
   render() {
     const history = this.state.history;
-    const current = history[history.length - 1];
+    const current = history[this.state.stepNumber];
     const winner = calculateWinner(current.squares);
+    //Tracks moves and creates a history
+    const moves = history.map((step, move) => {
+      const desc = move ?
+      'Go to move #' + move :
+      'Go to game start';
+      return (
+        <li key={move}>
+          <button onClick={() => this.jumpTo(move)}>{desc}</button>
+        </li>
+      );
+    });
+
+
+
     let status;
     if (winner) {
       status = 'Winner: ' + winner;
@@ -101,7 +123,7 @@ class Game extends Component {
         </div>
         <div className="game-info">
           <div>{status}</div>
-          <ol>{/* TODO */}</ol>
+          <ol>{moves}</ol>
         </div>
       </div>
     );
